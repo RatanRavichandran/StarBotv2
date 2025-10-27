@@ -1,215 +1,98 @@
-# 🌌 What's Above Me?
+# � StarBot
 
-An interactive web application that detects celestial objects directly overhead your location in real-time. Discover satellites, planets, stars, and other astronomical objects at your zenith point using your browser.
+**what you probably cant see when you look up**
 
-![What's Above Me Banner](https://img.shields.io/badge/Astronomy-Web%20App-blue) ![GitHub Pages](https://img.shields.io/badge/Deployment-GitHub%20Pages-success) ![License](https://img.shields.io/badge/License-MIT-green)
-
-## ✨ Features
-
-- 📍 **Precise Location Detection** - Uses browser Geolocation API with high accuracy mode
-- 🔭 **Real-time Sky Scanning** - Detects celestial objects directly above you
-- ✈️ **Airplane Tracking** - Live tracking of commercial flights overhead (OpenSky Network)
-- �️ **Interactive Map** - Visual map showing airplane positions relative to you with flight paths
-- �🛰️ **Satellite Tracking** - Live tracking of ISS, Starlink, GPS, and other satellites
-- 🪐 **Solar System Objects** - Real-time positions of planets, Moon, and Sun
-- ⭐ **Star Catalog** - Identifies bright stars from the Yale Bright Star Catalog (100+ stars)
-- 🎯 **Zenith Focus** - Specifically finds objects at or near your zenith (directly overhead)
-- 🌐 **No Backend Required** - Runs entirely in your browser
-- 📱 **Responsive Design** - Works on desktop, tablet, and mobile devices
+A real-time sky object detector with animated starry background. Discover airplanes, satellites, planets, stars, and celestial bodies directly overhead your location.
 
 ## 🚀 Live Demo
 
-**[Launch What's Above Me](https://yourusername.github.io/StarBot/)**
+**Frontend:** https://ratanravichandran.github.io/StarBot/  
+**Backend:** https://starbot-backend.onrender.com
 
-*(Replace with your actual GitHub Pages URL after deployment)*
+## ✨ Features
 
-## 🛠️ Technology Stack
+- 🌌 Animated starry night background with glass-morphism effects
+- ✈️ Real-time airplane tracking with flight routes
+- 🛰️ Satellite positions (ISS, Starlink, GPS, etc.)
+- 🪐 Solar system objects (planets, moon, sun)
+- ⭐ Bright star catalog (100+ stars)
+- 🤖 AI-generated facts about celestial objects (powered by OpenAI)
+- 📍 Hard-coded to Bangalore, India (12.868754°, 77.651279°)
+- 🗺️ Interactive map view for airplanes
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Astronomy Calculations**: Custom JavaScript utilities for celestial coordinate conversions
-- **APIs**:
-  - NASA JPL Horizons API (solar system objects)
-  - OpenSky Network API (real-time airplane tracking)
-  - CelesTrak API (satellite TLE data)
-  - Yale Bright Star Catalog (embedded)
-- **Libraries**:
-  - [satellite.js](https://github.com/shashwatak/satellite-js) - SGP4 satellite propagation
-  - [Leaflet.js](https://leafletjs.com/) - Interactive maps
+## 🛠️ Tech Stack
 
-## 📋 How It Works
+- **Frontend:** Vanilla JavaScript, CSS3 animations, Glass-morphism design
+- **Backend:** Node.js, Express (CORS proxy)
+- **APIs:** NASA Horizons, OpenSky Network, CelesTrak, OpenAI, SerpAPI (optional)
+- **Hosting:** GitHub Pages (frontend), Render (backend - free tier)
 
-1. **Location Detection**: Request user's precise geographic location (latitude, longitude, altitude)
-2. **Time Synchronization**: Calculate current UTC time, Julian Date, and Local Sidereal Time
-3. **Zenith Calculation**: Convert geographic position to celestial coordinates (RA/Dec at zenith)
-4. **Object Detection**:
-   - Query NASA Horizons for planetary positions
-   - Query OpenSky Network for real-time airplane positions and data
-   - Fetch satellite TLE data from CelesTrak and calculate positions using satellite.js
-   - Search embedded star catalog for nearby bright stars
-5. **Display Results**: Show objects at zenith and nearby objects with detailed information
+## � Local Development
 
-## 🎯 Usage
-
-### Basic Usage
-
-1. Open the application in a modern web browser
-2. Click "📍 Detect My Location" button
-3. Allow location access when prompted
-4. Wait for the sky scan to complete
-5. View celestial objects overhead
-
-### Interpreting Results
-
-- **Directly Above (Zenith)**: Objects within 5° of your zenith point
-- **Nearby Objects**: Objects within 10° of zenith
-- **Airplanes**: Live flights overhead with map visualization
-  - Click "🗺️ Show Map View" to see airplanes on an interactive map
-  - Blue lines connect your position to each airplane
-  - Click airplane markers for detailed flight information
-- **Satellites**: Live satellite passes overhead (when visible)
-- **Planets**: Solar system objects above your horizon
-- **Stars**: Bright stars from the catalog
-
-### Tips for Best Results
-
-- Use the app outdoors or near a window for better GPS accuracy
-- Enable high-accuracy location services on your device
-- Refresh data periodically as objects move across the sky
-- Check at different times of day/night for different objects
-
-## 📦 Installation & Deployment
-
-### Local Development
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/StarBot.git
-cd StarBot
+# Install dependencies
+npm install
+
+# Start backend server
+npm start
+
+# Open in browser
+http://localhost:3001
 ```
 
-2. Open `index.html` in a web browser, or use a local server:
-```bash
-# Using Python 3
-python -m http.server 8000
+## 🔑 Environment Variables
 
-# Using Node.js (http-server)
-npx http-server -p 8000
+Create a `.env` file:
+
+```env
+PORT=3001
+OPENAI_API_KEY=your_key_here
+SERPAPI_KEY=your_key_here
+NODE_ENV=development
 ```
 
-3. Navigate to `http://localhost:8000` (⚠️ Important: use `localhost`, not `[::]` or other addresses)
+## � Project Structure
 
-**Note:** If geolocation doesn't work, the app provides a manual location entry option.
-
-### GitHub Pages Deployment
-
-1. Push your code to GitHub:
-```bash
-git add .
-git commit -m "Initial commit"
-git push origin main
+```
+StarBot/
+├── js/
+│   ├── api.js           # API calls
+│   ├── app.js           # Main app logic
+│   ├── astronomy.js     # Celestial calculations
+│   ├── config.js        # Configuration
+│   ├── display.js       # UI rendering
+│   ├── facts.js         # AI fact generation
+│   ├── location.js      # Location management
+│   └── map.js           # Map display
+├── index.html           # Main HTML
+├── styles.css           # Styles with animations
+├── server.js            # Backend server
+└── package.json         # Dependencies
 ```
 
-2. Enable GitHub Pages:
-   - Go to your repository on GitHub
-   - Click **Settings** → **Pages**
-   - Under "Source", select **Deploy from a branch**
-   - Choose **main** branch and **/ (root)** folder
-   - Click **Save**
+## 🌐 Deployment
 
-3. Your site will be published at: `https://yourusername.github.io/StarBot/`
+### Frontend (GitHub Pages)
+Automatically deploys from `main` branch to https://ratanravichandran.github.io/StarBot/
 
-**Important**: GitHub Pages requires HTTPS, which is automatically provided. This is required for the Geolocation API to work.
+### Backend (Render)
+Deployed to https://starbot-backend.onrender.com  
+Auto-deploys on push to `main` branch.
 
-## ⚙️ Configuration
-
-### API Keys (Optional)
-
-The app works without any API keys using free services. However, you can optionally add an N2YO API key for enhanced satellite tracking:
-
-1. Sign up at [N2YO.com](https://www.n2yo.com/api/)
-2. Get your free API key (1000 requests/hour)
-3. Edit `js/config.js`:
-```javascript
-N2YO_API_KEY: 'YOUR_API_KEY_HERE'
-```
-
-### Customization
-
-Edit `js/config.js` to customize:
-
-- **Search radius**: `ZENITH_TOLERANCE` and `NEARBY_TOLERANCE`
-- **Satellite groups**: Add/remove from `SATELLITE_GROUPS`
-- **Solar system bodies**: Modify `SOLAR_SYSTEM_BODIES`
-- **Star catalog**: Add more stars to `BRIGHT_STARS`
-- **Display limits**: Adjust `MAX_NEARBY_OBJECTS` and `MAX_SATELLITES_DISPLAY`
-
-## 🌐 Browser Compatibility
-
-- ✅ Chrome/Edge 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Opera 76+
-- ⚠️ Requires HTTPS (except localhost)
-- ⚠️ Requires location permission
-
-**Having issues?** See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common solutions.
-
-## 🔒 Privacy & Security
-
-- ✅ All processing happens in your browser
-- ✅ Location data is never sent to any server
-- ✅ No cookies or tracking
-- ✅ No user data collected
-- ✅ Open source and transparent
-
-## 📚 Data Sources
-
-- **Planets/Sun/Moon**: [NASA JPL Horizons System](https://ssd.jpl.nasa.gov/horizons/)
-- **Airplanes**: [OpenSky Network](https://opensky-network.org/) - Free real-time ADS-B data
-- **Satellites**: [CelesTrak](https://celestrak.org/)
-- **Stars**: [Yale Bright Star Catalog](http://tdc-www.harvard.edu/catalogs/bsc5.html)
-- **Satellite Calculations**: [satellite.js](https://github.com/shashwatak/satellite-js)
-
-## 🤝 Contributing
-
-Contributions are welcome! Here are some ways to contribute:
-
-- 🐛 Report bugs or issues
-- 💡 Suggest new features
-- 📝 Improve documentation
-- 🌟 Add more stars to the catalog
-- 🛰️ Enhance satellite tracking
-- 🎨 Improve UI/UX design
+⚠️ **Note:** Free tier spins down after 15 min of inactivity. First request may take 30-60s.
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - See LICENSE file for details.
 
-## 🙏 Acknowledgments
+## 🙏 Data Sources
 
-- NASA JPL for the Horizons API
-- CelesTrak for satellite data
-- The satellite.js contributors
-- Yale University for the Bright Star Catalog
-
-## 📞 Contact
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/StarBot/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/StarBot/discussions)
-
-## 🗺️ Roadmap
-
-- [ ] Add constellation overlay visualization
-- [ ] Include meteor shower predictions
-- [ ] Add ISS visibility alerts
-- [ ] Support for deep sky objects (galaxies, nebulae)
-- [ ] Time travel feature (see sky at different times)
-- [ ] 3D sky visualization
-- [ ] Social sharing of discoveries
-- [ ] Mobile app version
-
+- NASA JPL Horizons API - Solar system object positions
+- OpenSky Network - Real-time airplane tracking
+- CelesTrak - Satellite TLE data
+- OpenAI - AI-powered fact generation
+- Yale Bright Star Catalog - Star positions
+- AviationStack API - Flight route information
 ---
 
-**Made with ❤️ for stargazers and astronomy enthusiasts**
-
-*Clear skies!* 🌟
+Made with ✨ by [RatanRavichandran](https://github.com/RatanRavichandran)

@@ -1,47 +1,37 @@
-// Configuration file for API keys and settings
 const CONFIG = {
-    // N2YO Satellite API (Optional - if you want to use N2YO instead of CelesTrak)
-    // Get your free API key at: https://www.n2yo.com/api/
-    N2YO_API_KEY: '57EM7E-P9VJ8E-7VB2R5-5LAH', // Your N2YO API key
+    N2YO_API_KEY: '57EM7E-P9VJ8E-7VB2R5-5LAH',
     
-    // Backend Server API (use this when running with Node.js backend)
-    USE_BACKEND: true, // Set to true to use backend proxy, false for direct API calls
+    USE_BACKEND: true,
     BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
         ? 'http://localhost:3001/api' 
-        : 'https://starbot-backend.onrender.com/api', // Your Render backend URL
+        : 'https://starbot-backend.onrender.com/api',
     
-    // API Endpoints (direct - only used when USE_BACKEND is false)
     HORIZONS_API: 'https://ssd.jpl.nasa.gov/api/horizons.api',
     CELESTRAK_API: 'https://celestrak.org/NORAD/elements/gp.php',
     N2YO_API: 'https://api.n2yo.com/rest/v1/satellite',
-    OPENSKY_API: 'https://opensky-network.org/api/states/all', // Free airplane tracking API
-    AVIATIONSTACK_API: 'http://api.aviationstack.com/v1/flights', // Free flight route API (requires key)
-    // Get free API key at: https://aviationstack.com/
-    AVIATIONSTACK_KEY: '818f1c083822335529fd203e2ab9bb10', // Add your free API key here (50 requests/month free)
-    WIKIPEDIA_API: 'https://en.wikipedia.org/w/api.php', // Free Wikipedia API for fun facts
-    MINOR_PLANET_API: 'https://api.le-systeme-solaire.net/rest/bodies/', // Free solar system API
+    OPENSKY_API: 'https://opensky-network.org/api/states/all',
+    AVIATIONSTACK_API: 'http://api.aviationstack.com/v1/flights',
+    AVIATIONSTACK_KEY: '818f1c083822335529fd203e2ab9bb10',
+    WIKIPEDIA_API: 'https://en.wikipedia.org/w/api.php',
+    MINOR_PLANET_API: 'https://api.le-systeme-solaire.net/rest/bodies/',
     
-    // AI-powered fact generation (API keys now stored securely in backend .env file)
-    OPENAI_API_KEY: '', // Kept for backward compatibility but not used when USE_BACKEND is true
+    OPENAI_API_KEY: '',
     OPENAI_API: 'https://api.openai.com/v1/chat/completions',
-    SERPAPI_KEY: 'Bekkb8RpCux5NmUniK72eNuJ', // Kept for backward compatibility but not used when USE_BACKEND is true
+    SERPAPI_KEY: '',
     SERPAPI_SEARCH: 'https://serpapi.com/search',
     
-    // Search radius settings (in degrees)
-    ZENITH_TOLERANCE: 5, // Objects within 5 degrees of zenith are considered "directly above"
-    NEARBY_TOLERANCE: 10, // Objects within 10 degrees shown as "nearby"
+    ZENITH_TOLERANCE: 5,
+    NEARBY_TOLERANCE: 10,
     
-    // Satellite categories for CelesTrak
     SATELLITE_GROUPS: [
-        'stations', // Space stations (ISS, etc.)
-        'visual', // Bright satellites
-        'starlink', // Starlink satellites
-        'iridium-NEXT', // Iridium satellites
-        'galileo', // Galileo navigation
-        'gps-ops' // GPS satellites
+        'stations',
+        'visual',
+        'starlink',
+        'iridium-NEXT',
+        'galileo',
+        'gps-ops'
     ],
     
-    // Solar system bodies to check
     SOLAR_SYSTEM_BODIES: [
         { id: '10', name: 'Sun' },
         { id: '301', name: 'Moon' },
@@ -54,10 +44,7 @@ const CONFIG = {
         { id: '899', name: 'Neptune' }
     ],
     
-    // Star catalog - Brightest stars with their celestial coordinates
-    // From Yale Bright Star Catalog - Expanded catalog with 100+ bright stars
     BRIGHT_STARS: [
-        // Magnitude < 0 (Brightest stars)
         { name: 'Sirius', ra: 6.7525, dec: -16.7161, mag: -1.46, constellation: 'Canis Major', spectralType: 'A1V' },
         { name: 'Canopus', ra: 6.3992, dec: -52.6956, mag: -0.74, constellation: 'Carina', spectralType: 'A9II' },
         { name: 'Alpha Centauri A', ra: 14.6599, dec: -60.8350, mag: -0.27, constellation: 'Centaurus', spectralType: 'G2V' },
@@ -163,15 +150,10 @@ const CONFIG = {
         { name: 'Sadalsuud', ra: 21.5256, dec: -5.5711, mag: 2.87, constellation: 'Aquarius', spectralType: 'G0Ib' }
     ],
     
-    // Cache settings
-    CACHE_DURATION: 300000, // 5 minutes in milliseconds
-    
-    // Display settings
+    CACHE_DURATION: 300000,
     MAX_NEARBY_OBJECTS: 10,
     MAX_SATELLITES_DISPLAY: 15,
     MAX_AIRPLANES_DISPLAY: 20,
-    
-    // Airplane altitude filters (in meters)
-    MIN_AIRPLANE_ALTITUDE: 1000, // Minimum 1km altitude
-    MAX_AIRPLANE_ALTITUDE: 15000 // Maximum 15km altitude (typical cruising)
+    MIN_AIRPLANE_ALTITUDE: 1000,
+    MAX_AIRPLANE_ALTITUDE: 15000
 };

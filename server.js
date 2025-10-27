@@ -1,4 +1,3 @@
-// StarBot Backend Server - CORS Proxy for NASA Horizons, OpenAI, and SerpAPI
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
@@ -7,17 +6,12 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
-
-// Serve static files from the current directory
 app.use(express.static(__dirname));
 
 console.log('🚀 StarBot Backend Server Starting...');
-console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
-// Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ 
         status: 'ok', 
@@ -26,7 +20,6 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// NASA Horizons API Proxy
 app.get('/api/horizons', async (req, res) => {
     try {
         const queryParams = new URLSearchParams(req.query);
@@ -51,7 +44,6 @@ app.get('/api/horizons', async (req, res) => {
     }
 });
 
-// SerpAPI Proxy
 app.get('/api/serp', async (req, res) => {
     try {
         const { q, num = 3 } = req.query;
@@ -81,7 +73,6 @@ app.get('/api/serp', async (req, res) => {
     }
 });
 
-// OpenAI API Proxy
 app.post('/api/openai', async (req, res) => {
     try {
         if (!process.env.OPENAI_API_KEY) {
@@ -115,17 +106,7 @@ app.post('/api/openai', async (req, res) => {
     }
 });
 
-// Start server
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📡 Available endpoints:');
-    console.log(`   • http://localhost:${PORT} - Frontend application`);
-    console.log(`   • http://localhost:${PORT}/api/health - Health check`);
-    console.log(`   • http://localhost:${PORT}/api/horizons - NASA Horizons proxy`);
-    console.log(`   • http://localhost:${PORT}/api/serp - SerpAPI proxy`);
-    console.log(`   • http://localhost:${PORT}/api/openai - OpenAI proxy`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('💡 Access the app at: http://localhost:' + PORT);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📡 Endpoints: /api/health, /api/horizons, /api/serp, /api/openai');
 });
