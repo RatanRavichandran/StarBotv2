@@ -1,5 +1,3 @@
-# � StarBot
-
 **what you probably cant see when you look up**
 
 A real-time sky object detector with animated starry background. Discover airplanes, satellites, planets, stars, and celestial bodies directly overhead your location.
@@ -73,17 +71,9 @@ StarBot/
 ## 🌐 Deployment
 
 ### Frontend (GitHub Pages)
-Automatically deploys from `main` branch to https://ratanravichandran.github.io/StarBot/
+https://ratanravichandran.github.io/StarBot/
 
 ### Backend (Render)
-Deployed to https://starbot-backend.onrender.com  
-Auto-deploys on push to `main` branch.
-
-⚠️ **Note:** Free tier spins down after 15 min of inactivity. First request may take 30-60s.
-
-## 📝 License
-
-MIT License - See LICENSE file for details.
 
 ## 🙏 Data Sources
 
