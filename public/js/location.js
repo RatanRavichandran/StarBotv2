@@ -21,26 +21,56 @@ const LocationManager = {
     },
     
     /**
-     * Request user's location with high accuracy
-     * HARD-CODED to Bangalore, India coordinates
+     * Request user's location via browser Geolocation API
+     * Falls back to IP-based geolocation if denied/unavailable
      * @returns {Promise<Object>} Location object with lat, lng, alt, accuracy
      */
     async getLocation() {
-        return new Promise(async (resolve, reject) => {
-            // Hard-coded coordinates for Kozhikode, Kerala, India
-            console.log('📍 Using hard-coded location: Kozhikode, Kerala');
-            
+        // Try browser geolocation first
+        if (navigator.geolocation) {
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000
+                    });
+                });
+
+                this.currentLocation = {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    altitude: position.coords.altitude || 0,
+                    accuracy: position.coords.accuracy,
+                    timestamp: position.timestamp
+                };
+
+                console.log('📍 Got browser location:', this.currentLocation);
+                return this.currentLocation;
+            } catch (error) {
+                console.warn('Geolocation failed, trying IP fallback:', error.message);
+            }
+        }
+
+        // Fallback: IP-based geolocation
+        try {
+            const resp = await fetch('https://ipapi.co/json/');
+            const data = await resp.json();
+
             this.currentLocation = {
-                latitude: 11.771107,
-                longitude: 75.466299,
-                altitude: 1, // Kozhikode's approximate elevation in meters
-                accuracy: 10,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                altitude: 0,
+                accuracy: 5000, // IP geolocation is rough
                 timestamp: Date.now()
             };
-            
-            console.log('✅ Location set:', this.currentLocation);
-            resolve(this.currentLocation);
-        });
+
+            console.log('📍 Got IP-based location:', this.currentLocation);
+            return this.currentLocation;
+        } catch (ipError) {
+            console.error('IP geolocation also failed:', ipError);
+            throw new Error('Unable to determine your location. Please allow location access and try again.');
+        }
     },
     
     /**
