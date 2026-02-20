@@ -27,13 +27,13 @@ const LocationManager = {
      */
     async getLocation() {
         return new Promise(async (resolve, reject) => {
-            // Hard-coded coordinates for Bangalore, India
-            console.log('📍 Using hard-coded location: Bangalore, India');
+            // Hard-coded coordinates for Kozhikode, Kerala, India
+            console.log('📍 Using hard-coded location: Kozhikode, Kerala');
             
             this.currentLocation = {
-                latitude: 12.868754021779418,
-                longitude: 77.65127997010944,
-                altitude: 920, // Bangalore's approximate elevation in meters
+                latitude: 11.771107,
+                longitude: 75.466299,
+                altitude: 1, // Kozhikode's approximate elevation in meters
                 accuracy: 10,
                 timestamp: Date.now()
             };
