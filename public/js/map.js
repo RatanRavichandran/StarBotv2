@@ -179,10 +179,9 @@ const MapManager = {
             const destCoords = hasRoute ? this.getAirportCoords(plane.destination) : null;
             
             if (destCoords) {
-                // Draw line from plane to destination airport
-                const midLat = (lat + destCoords[0]) / 2;
-                const midLon = (lon + destCoords[1]) / 2;
-                trajectoryLine = L.polyline([[lat, lon], [midLat, midLon], destCoords], {
+                // Draw geodesic arc from plane to destination airport
+                const arcPoints = this.generateGeodesicArc(lat, lon, destCoords[0], destCoords[1], 24);
+                trajectoryLine = L.polyline(arcPoints, {
                     color: 'rgba(255,255,255,0.7)',
                     weight: 1.5,
                     opacity: 0,
@@ -288,8 +287,8 @@ const MapManager = {
             return points;
         }
         
-        const timeMinutes = 45; // Predict 45 minutes ahead
-        const steps = 12; // Number of points along trajectory
+        const timeMinutes = 180; // Predict 3 hours ahead
+        const steps = 24; // Number of points along trajectory
         
         // Convert velocity from km/h to km/min
         const speedKmPerMin = velocity / 60;
@@ -314,6 +313,32 @@ const MapManager = {
      * @param {number} distanceKm - Distance in kilometers
      * @returns {Object} New position {lat, lon}
      */
+    /**
+     * Generate a great-circle arc between two points
+     */
+    generateGeodesicArc(lat1, lon1, lat2, lon2, numPoints) {
+        const toRad = x => x * Math.PI / 180;
+        const toDeg = x => x * 180 / Math.PI;
+        const p1 = toRad(lat1), l1 = toRad(lon1);
+        const p2 = toRad(lat2), l2 = toRad(lon2);
+        const d = 2 * Math.asin(Math.sqrt(
+            Math.pow(Math.sin((p2 - p1) / 2), 2) +
+            Math.cos(p1) * Math.cos(p2) * Math.pow(Math.sin((l2 - l1) / 2), 2)
+        ));
+        if (d < 1e-10) return [[lat1, lon1], [lat2, lon2]];
+        const points = [];
+        for (let i = 0; i <= numPoints; i++) {
+            const f = i / numPoints;
+            const A = Math.sin((1 - f) * d) / Math.sin(d);
+            const B = Math.sin(f * d) / Math.sin(d);
+            const x = A * Math.cos(p1) * Math.cos(l1) + B * Math.cos(p2) * Math.cos(l2);
+            const y = A * Math.cos(p1) * Math.sin(l1) + B * Math.cos(p2) * Math.sin(l2);
+            const z = A * Math.sin(p1) + B * Math.sin(p2);
+            points.push([toDeg(Math.atan2(z, Math.sqrt(x * x + y * y))), toDeg(Math.atan2(y, x))]);
+        }
+        return points;
+    },
+
     calculateNewPosition(lat, lon, heading, distanceKm) {
         const R = 6371; // Earth radius in km
         const d = distanceKm / R; // Angular distance in radians
