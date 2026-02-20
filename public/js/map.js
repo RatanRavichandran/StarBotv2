@@ -80,10 +80,10 @@ const MapManager = {
             const div = L.DomUtil.create('div', 'map-legend');
             div.innerHTML = `
                 <div class="legend-title">Flight Map</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#51cf66"></span> Low alt (&lt;5 km)</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#4dabf7"></span> Cruising (5-12 km)</div>
-                <div class="legend-item"><span class="legend-dot" style="background:#da77f2"></span> High alt (&gt;12 km)</div>
-                <div class="legend-item"><span class="legend-swatch" style="border-bottom:2px dashed #ffd43b"></span> Route / trajectory</div>
+                <div class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.35)"></span> Low alt (&lt;5 km)</div>
+                <div class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.6)"></span> Cruising (5-12 km)</div>
+                <div class="legend-item"><span class="legend-dot" style="background:rgba(255,255,255,0.85)"></span> High alt (&gt;12 km)</div>
+                <div class="legend-item"><span class="legend-swatch" style="border-bottom:2px dashed rgba(255,255,255,0.5)"></span> Route / trajectory</div>
             `;
             return div;
         };
@@ -100,9 +100,9 @@ const MapManager = {
      * Get altitude-based color for a plane
      */
     getAltitudeColor(altMeters) {
-        if (altMeters < 5000) return '#51cf66';  // green — low
-        if (altMeters < 12000) return '#4dabf7'; // blue — cruising
-        return '#da77f2';                         // purple — high
+        if (altMeters < 5000) return 'rgba(255,255,255,0.45)';   // dim — low
+        if (altMeters < 12000) return 'rgba(255,255,255,0.65)';  // mid — cruising
+        return 'rgba(255,255,255,0.85)';                          // bright — high
     },
     
     displayAirplanesOnMap(airplanes, userLat, userLon) {
@@ -183,7 +183,7 @@ const MapManager = {
                 const midLat = (lat + destCoords[0]) / 2;
                 const midLon = (lon + destCoords[1]) / 2;
                 trajectoryLine = L.polyline([[lat, lon], [midLat, midLon], destCoords], {
-                    color: '#ffd43b',
+                    color: 'rgba(255,255,255,0.7)',
                     weight: 1.5,
                     opacity: 0,
                     dashArray: '4,6',
@@ -205,7 +205,7 @@ const MapManager = {
                 // Heading-based trajectory fallback
                 const trajectoryPoints = this.calculateTrajectory(lat, lon, plane.heading, plane.velocity);
                 trajectoryLine = L.polyline(trajectoryPoints, {
-                    color: '#ffd43b',
+                    color: 'rgba(255,255,255,0.7)',
                     weight: 1.5,
                     opacity: 0,
                     dashArray: '4,6',
@@ -288,8 +288,8 @@ const MapManager = {
             return points;
         }
         
-        const timeMinutes = 10; // Predict 10 minutes ahead
-        const steps = 5; // Number of points along trajectory
+        const timeMinutes = 45; // Predict 45 minutes ahead
+        const steps = 12; // Number of points along trajectory
         
         // Convert velocity from km/h to km/min
         const speedKmPerMin = velocity / 60;
