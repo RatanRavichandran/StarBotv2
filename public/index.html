@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Discover what's directly above you right now — satellites, planets, stars, airplanes, and more.">
+    <meta name="keywords" content="astronomy, satellites, stars, planets, zenith, sky, celestial objects, starbot">
+    <meta name="author" content="StarBot">
+    <title>StarBot — What's Above You Right Now</title>
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="StarBot — What's Above You Right Now">
+    <meta property="og:description" content="Discover satellites, planets, stars, and airplanes directly overhead in real time.">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated Background Layers -->
+    <canvas id="starfield"></canvas>
+    <div class="nebula-bg"></div>
+    <div class="shooting-stars">
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+        <div class="shooting-star"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Hero Header -->
+        <header class="hero-header">
+            <div class="logo-mark">
+                <svg viewBox="0 0 60 60" class="logo-svg">
+                    <circle cx="30" cy="30" r="3" fill="#ffd700" class="logo-center"/>
+                    <circle cx="30" cy="30" r="12" fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="0.5" class="orbit orbit-1"/>
+                    <circle cx="30" cy="30" r="20" fill="none" stroke="rgba(255,215,0,0.2)" stroke-width="0.5" class="orbit orbit-2"/>
+                    <circle cx="30" cy="30" r="28" fill="none" stroke="rgba(255,215,0,0.1)" stroke-width="0.5" class="orbit orbit-3"/>
+                    <circle cx="42" cy="30" r="1.5" fill="#4a9eff" class="orbiter orbiter-1"/>
+                    <circle cx="30" cy="10" r="1" fill="#ff6b9d" class="orbiter orbiter-2"/>
+                    <circle cx="5" cy="40" r="1.2" fill="#51cf66" class="orbiter orbiter-3"/>
+                </svg>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-line">what you probably</span>
+                <span class="title-line accent">can't see when you look up</span>
+            </h1>
+            <p class="hero-subtitle">
+                <span class="subtitle-icon">◈</span>
+                real-time celestial tracker for your exact location
+                <span class="subtitle-icon">◈</span>
+            </p>
+            <div class="header-stats" id="headerStats">
+                <div class="stat-pill" id="statTime">
+                    <span class="stat-dot"></span>
+                    <span id="liveTime">--:--:--</span> UTC
+                </div>
+                <div class="stat-pill summary-pill hidden" id="statSummary">—</div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Location Card -->
+            <section class="glass-card location-card" id="locationSection">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="10" r="3"/>
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Your Position</h2>
+                </div>
+                <div class="location-grid" id="locationInfo">
+                    <div class="location-item">
+                        <span class="location-label">Latitude</span>
+                        <span class="location-value" id="latitude">—</span>
+                    </div>
+                    <div class="location-item">
+                        <span class="location-label">Longitude</span>
+                        <span class="location-value" id="longitude">—</span>
+                    </div>
+                    <div class="location-item">
+                        <span class="location-label">Altitude</span>
+                        <span class="location-value"><span id="altitude">—</span> m</span>
+                    </div>
+                    <div class="location-item">
+                        <span class="location-label">Accuracy</span>
+                        <span class="location-value"><span id="accuracy">—</span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <div id="loadingIndicator" class="loading-state hidden">
+                <div class="orbit-spinner">
+                    <div class="orbit-ring"></div>
+                    <div class="orbit-ring"></div>
+                    <div class="orbit-ring"></div>
+                    <div class="orbit-dot"></div>
+                </div>
+                <p class="loading-text" id="loadingMessage">Scanning the sky above you...</p>
+                <div class="loading-bar">
+                    <div class="loading-bar-fill"></div>
+                </div>
+            </div>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="error-card hidden"></div>
+
+            <!-- Celestial Coordinates -->
+            <section id="celestialInfo" class="glass-card celestial-card hidden">
+                <div class="card-header">
+                    <div class="card-icon accent-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </div>
+                    <h2 class="card-title">Zenith Coordinates</h2>
+                    <span class="info-tooltip" data-tooltip="The zenith is the point directly above you. These coordinates map that point on the celestial sphere.">?</span>
+                </div>
+                <div class="coord-grid">
+                    <div class="coord-card">
+                        <div class="coord-label">
+                            Right Ascension
+                            <span class="info-tooltip small" data-tooltip="Like longitude for the sky. Measures east-west position in hours (0-24h).">?</span>
+                        </div>
+                        <div class="coord-value" id="ra">—</div>
+                    </div>
+                    <div class="coord-card">
+                        <div class="coord-label">
+                            Declination
+                            <span class="info-tooltip small" data-tooltip="Like latitude for the sky. Measures north-south position in degrees (-90° to +90°).">?</span>
+                        </div>
+                        <div class="coord-value" id="dec">—</div>
+                    </div>
+                    <div class="coord-card">
+                        <div class="coord-label">
+                            Sidereal Time
+                            <span class="info-tooltip small" data-tooltip="Time based on Earth's rotation relative to distant stars.">?</span>
+                        </div>
+                        <div class="coord-value" id="lst">—</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="results-wrapper hidden">
+                <div class="results-header">
+                    <h2 class="results-title">
+                        <span class="star-burst">✦</span>
+                        What's in Your Sky
+                        <span class="star-burst">✦</span>
+                    </h2>
+                </div>
+
+                <!-- Zenith Object -->
+                <div id="zenithObject" class="glass-card zenith-card hidden">
+                    <div class="zenith-badge">
+                        <span class="badge-glow"></span>
+                        DIRECTLY ABOVE YOU
+                    </div>
+                    <div id="zenithContent"></div>
+                </div>
+
+                <!-- Nearby Objects -->
+                <div id="nearbyObjects" class="glass-card hidden">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M12 8v4l3 3"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">Nearby Objects <span class="dim">(within 10°)</span></h3>
+                    </div>
+                    <div id="nearbyContent"></div>
+                </div>
+
+                <!-- Airplanes -->
+                <div id="airplaneObjects" class="glass-card category-card hidden">
+                    <div class="collapsible-header" id="airplaneHeader">
+                        <div class="category-label">
+                            <span class="category-emoji">✈️</span>
+                            <h3>Flights Overhead</h3>
+                            <span class="object-count" id="airplaneCount">0</span>
+                        </div>
+                        <span class="collapse-chevron">‹</span>
+                    </div>
+                    <div id="airplaneCollapsibleContent" class="collapsible-body" style="display: block;">
+                        <div id="airplaneMap" class="map-container"></div>
+                        <div class="map-toggle-row">
+                            <button id="toggleMapBtn" class="btn-ghost btn-ghost-active">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <path d="M3 9h18M9 3v18"/>
+                                </svg>
+                                Hide Map
+                            </button>
+                        </div>
+                        <div id="airplaneContent"></div>
+                    </div>
+                </div>
+
+                <!-- Satellites -->
+                <div id="satelliteObjects" class="glass-card category-card hidden">
+                    <div class="collapsible-header" id="satelliteHeader">
+                        <div class="category-label">
+                            <span class="category-emoji">🛰️</span>
+                            <h3>Satellites Overhead</h3>
+                            <span class="object-count" id="satelliteCount">0</span>
+                        </div>
+                        <span class="collapse-chevron">‹</span>
+                    </div>
+                    <div id="satelliteCollapsibleContent" class="collapsible-body" style="display: block;">
+                        <div id="satelliteContent"></div>
+                    </div>
+                </div>
+
+                <!-- Planets -->
+                <div id="planetObjects" class="glass-card category-card hidden">
+                    <div class="collapsible-header" id="planetHeader">
+                        <div class="category-label">
+                            <span class="category-emoji">🪐</span>
+                            <h3>Solar System</h3>
+                            <span class="object-count" id="planetCount">0</span>
+                        </div>
+                        <span class="collapse-chevron">‹</span>
+                    </div>
+                    <div id="planetCollapsibleContent" class="collapsible-body" style="display: block;">
+                        <div id="planetContent"></div>
+                    </div>
+                </div>
+
+                <!-- Stars -->
+                <div id="starObjects" class="glass-card category-card hidden">
+                    <div class="collapsible-header" id="starHeader">
+                        <div class="category-label">
+                            <span class="category-emoji">⭐</span>
+                            <h3>Stars</h3>
+                            <span class="object-count" id="starCount">0</span>
+                        </div>
+                        <span class="collapse-chevron">‹</span>
+                    </div>
+                    <div id="starCollapsibleContent" class="collapsible-body" style="display: block;">
+                        <div id="starContent"></div>
+                    </div>
+                </div>
+
+                <!-- Celestial Bodies -->
+                <div id="celestialBodyObjects" class="glass-card category-card hidden">
+                    <div class="collapsible-header" id="celestialBodyHeader">
+                        <div class="category-label">
+                            <span class="category-emoji">🌌</span>
+                            <h3>Deep Sky Objects</h3>
+                            <span class="object-count" id="celestialBodyCount">0</span>
+                        </div>
+                        <span class="collapse-chevron">‹</span>
+                    </div>
+                    <div id="celestialBodyCollapsibleContent" class="collapsible-body" style="display: block;">
+                        <div id="celestialBodyContent"></div>
+                    </div>
+                </div>
+
+                <!-- No Results -->
+                <div id="noResults" class="glass-card no-results hidden">
+                    <div class="no-results-icon">🌌</div>
+                    <p>The zenith currently points to deep space between stars. Nothing major directly overhead right now.</p>
+                </div>
+            </section>
+
+            <!-- Refresh -->
+            <div id="refreshSection" class="refresh-area hidden">
+                <button id="refreshBtn" class="btn-refresh">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                        <path d="M23 4v6h-6M1 20v-6h6"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                    </svg>
+                    Refresh Sky Data
+                </button>
+                <p class="last-updated">Updated: <span id="lastUpdate">—</span></p>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-sources">
+                <span class="footer-label">Data Sources</span>
+                <div class="source-tags">
+                    <span class="source-tag">NASA JPL</span>
+                    <span class="source-tag">OpenSky</span>
+                    <span class="source-tag">CelesTrak</span>
+                    <span class="source-tag">Yale BSC</span>
+                </div>
+            </div>
+            <div class="footer-note">
+                <p>⚡ Location required · All processing client-side</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- App Modules -->
+    <script src="js/config.js"></script>
+    <script src="js/astronomy.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/facts.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/display.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/starfield.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

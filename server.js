@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const fetch = require('node-fetch');
 require('dotenv').config();
 
@@ -8,7 +9,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 console.log('🚀 StarBot Backend Server Starting...');
 
@@ -39,35 +40,6 @@ app.get('/api/horizons', async (req, res) => {
         console.error('❌ Horizons API Error:', error.message);
         res.status(500).json({ 
             error: 'Failed to fetch from Horizons API',
-            message: error.message 
-        });
-    }
-});
-
-app.get('/api/serp', async (req, res) => {
-    try {
-        const { q, num = 3 } = req.query;
-        
-        if (!process.env.SERPAPI_KEY) {
-            throw new Error('SERPAPI_KEY not configured');
-        }
-        
-        const url = `https://serpapi.com/search?q=${encodeURIComponent(q)}&api_key=${process.env.SERPAPI_KEY}&num=${num}`;
-        
-        console.log(`🔍 Proxying SerpAPI search: "${q}"`);
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(`SerpAPI error: ${response.status}`);
-        }
-        
-        res.json(data);
-    } catch (error) {
-        console.error('❌ SerpAPI Error:', error.message);
-        res.status(500).json({ 
-            error: 'Failed to fetch from SerpAPI',
             message: error.message 
         });
     }

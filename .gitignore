@@ -1,4 +1,4 @@
-# Node modules (if you add any npm packages later)
+# Node modules
 node_modules/
 
 # Editor directories and files
@@ -17,10 +17,14 @@ yarn-error.log*
 # Environment variables
 .env
 .env.local
+.env.production.local
 
-# Build outputs (if you add build tools later)
+# Build outputs
 dist/
 build/
+
+# Vercel
+.vercel/
 
 # Temporary files
 *.tmp

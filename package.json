@@ -1,12 +1,12 @@
 {
-  "name": "whats-above-me",
-  "version": "1.0.0",
+  "name": "starbot",
+  "version": "2.0.0",
   "description": "A web app that detects celestial objects directly overhead your location",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "client": "npx http-server -p 8000 -o"
+    "vercel-dev": "vercel dev"
   },
   "keywords": [
     "astronomy",
@@ -21,17 +21,12 @@
   "author": "StarBot",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.18.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/yourusername/StarBot.git"
-  },
-  "homepage": "https://yourusername.github.io/StarBot/"
+  }
 }
