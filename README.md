@@ -15,7 +15,6 @@ A real-time sky object detector with animated starry background. Discover airpla
 - 🪐 Solar system objects (planets, moon, sun)
 - ⭐ Bright star catalog (100+ stars)
 - 🤖 AI-generated facts about celestial objects (powered by OpenAI)
-- 📍 Hard-coded to Bangalore, India (12.868754°, 77.651279°)
 - 🗺️ Interactive map view for airplanes
 
 ## 🛠️ Tech Stack
