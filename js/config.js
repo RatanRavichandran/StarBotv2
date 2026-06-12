@@ -2,9 +2,11 @@ const CONFIG = {
     N2YO_API_KEY: '57EM7E-P9VJ8E-7VB2R5-5LAH',
     
     USE_BACKEND: true,
-    BACKEND_URL: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3001/api' 
-        : 'https://starbot-backend.onrender.com/api',
+    BACKEND_URL: (function() {
+        const host = window.location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') return 'http://localhost:3001/api';
+        return '/api';
+    })(),
     
     HORIZONS_API: 'https://ssd.jpl.nasa.gov/api/horizons.api',
     CELESTRAK_API: 'https://celestrak.org/NORAD/elements/gp.php',
