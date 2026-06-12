@@ -1,5 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/$1" }
-  ]
+  "functions": {
+    "api/*.js": {
+      "memory": 256
+    }
+  }
 }
