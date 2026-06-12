@@ -65,13 +65,11 @@ const FactsFetcher = {
      */
     async fetchAIFact(name, type) {
         try {
-            // Try to search for current information using SerpAPI (optional, will proceed without it)
             let searchResults = '';
             try {
                 searchResults = await this.searchWithSerpAPI(name, type);
-            } catch (searchError) {
-                // SerpAPI failed (likely 401 or quota exceeded), continue without search context
-                console.log(`⚠️ SerpAPI unavailable for ${name}, generating fact without web search context`);
+            } catch {
+                // proceed without search context
             }
             
             // Use OpenAI to generate an interesting 2-line fact (with or without search context)

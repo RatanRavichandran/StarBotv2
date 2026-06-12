@@ -141,18 +141,21 @@ const APIManager = {
                 if (line.includes('$$EOE')) {
                     break;
                 }
-                if (inData && line.trim() && !line.startsWith(' ')) {
-                    // Parse the data line (format varies)
-                    const parts = line.trim().split(/\s+/);
+                if (inData && line.trim()) {
+                    // CSV format: date, blank, RA(deg), Dec(deg), Az, El
+                    const parts = line.trim().split(',');
                     if (parts.length >= 4) {
-                        // Typical format includes RA, Dec, Az, El
-                        ra = parseFloat(parts[2]) / 15; // Convert degrees to hours
-                        dec = parseFloat(parts[3]);
-                        if (parts.length >= 6) {
-                            azimuth = parseFloat(parts[4]);
-                            altitude = parseFloat(parts[5]);
+                        const raVal = parseFloat(parts[2]);
+                        const decVal = parseFloat(parts[3]);
+                        if (!isNaN(raVal) && !isNaN(decVal)) {
+                            ra = raVal / 15; // degrees → hours
+                            dec = decVal;
+                            if (parts.length >= 6) {
+                                azimuth = parseFloat(parts[4]);
+                                altitude = parseFloat(parts[5]);
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
             }
@@ -203,24 +206,21 @@ const APIManager = {
             const lomin = longitude - lonDelta;
             const lomax = longitude + lonDelta;
             
-            const url = `${CONFIG.OPENSKY_API}?lamin=${lamin}&lamax=${lamax}&lomin=${lomin}&lomax=${lomax}`;
-            
-            console.log('Fetching airplanes from OpenSky Network...');
+            const url = CONFIG.USE_BACKEND
+                ? `${CONFIG.BACKEND_URL}/opensky?lamin=${lamin}&lamax=${lamax}&lomin=${lomin}&lomax=${lomax}`
+                : `${CONFIG.OPENSKY_API}?lamin=${lamin}&lamax=${lamax}&lomin=${lomin}&lomax=${lomax}`;
+
             const response = await fetch(url);
             
             if (!response.ok) {
-                console.warn('OpenSky API error:', response.status);
                 return [];
             }
-            
+
             const data = await response.json();
-            
+
             if (!data.states || data.states.length === 0) {
-                console.log('No airplanes found in the area');
                 return [];
             }
-            
-            console.log(`Found ${data.states.length} airplanes in the area`);
             
             const airplanes = [];
             
@@ -292,15 +292,9 @@ const APIManager = {
                 }
             }
             
-            // Sort by elevation angle (highest first)
             airplanes.sort((a, b) => b.altitude - a.altitude);
-            
-            // Limit results
             const topAirplanes = airplanes.slice(0, CONFIG.MAX_AIRPLANES_DISPLAY);
-            
             this.cache.set(cacheKey, { data: topAirplanes, timestamp: Date.now() });
-            console.log(`Processed ${topAirplanes.length} airplanes overhead`);
-            
             return topAirplanes;
             
         } catch (error) {
@@ -335,18 +329,15 @@ const APIManager = {
             // Method 1: Try with ICAO24 code
             try {
                 const url = `${CONFIG.AVIATIONSTACK_API}?access_key=${CONFIG.AVIATIONSTACK_KEY}&flight_icao=${trimmedCallsign}`;
-                console.log(`Trying AviationStack with ICAO callsign: ${trimmedCallsign}`);
-                
                 const response = await fetch(url);
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    
+
                     if (data && data.data && data.data.length > 0) {
                         const flight = data.data[0];
-                        
+
                         if (flight.departure && flight.arrival && flight.departure.iata && flight.arrival.iata) {
-                            console.log(`✅ Route found via AviationStack: ${flight.departure.iata} → ${flight.arrival.iata}`);
                             return {
                                 origin: flight.departure.iata,
                                 destination: flight.arrival.iata,
@@ -370,18 +361,15 @@ const APIManager = {
             if (iataAttempt) {
                 try {
                     const url = `${CONFIG.AVIATIONSTACK_API}?access_key=${CONFIG.AVIATIONSTACK_KEY}&flight_iata=${iataAttempt}`;
-                    console.log(`Trying AviationStack with extracted IATA: ${iataAttempt}`);
-                    
                     const response = await fetch(url);
-                    
+
                     if (response.ok) {
                         const data = await response.json();
-                        
+
                         if (data && data.data && data.data.length > 0) {
                             const flight = data.data[0];
-                            
+
                             if (flight.departure && flight.arrival && flight.departure.iata && flight.arrival.iata) {
-                                console.log(`✅ Route found via IATA extraction: ${flight.departure.iata} → ${flight.arrival.iata}`);
                                 return {
                                     origin: flight.departure.iata,
                                     destination: flight.arrival.iata,
@@ -400,7 +388,6 @@ const APIManager = {
             }
         }
         
-        console.log(`❌ No route data available for ${trimmedCallsign}`);
         return null;
     },
     
@@ -450,38 +437,16 @@ const APIManager = {
      * @returns {Promise<Array>} Airplanes with route data
      */
     async enrichAirplanesWithRoutes(airplanes) {
-        if (!airplanes || airplanes.length === 0) {
-            console.log('No airplanes to enrich with routes');
-            return airplanes;
-        }
-        
-        console.log(`📍 Fetching route information for ${airplanes.length} airplanes...`);
-        console.log('Callsigns:', airplanes.map(p => p.callsign).join(', '));
-        
-        const enrichedAirplanes = await Promise.all(
+        if (!airplanes || airplanes.length === 0) return airplanes;
+
+        const enriched = await Promise.all(
             airplanes.map(async (plane) => {
                 const route = await this.fetchFlightRoute(plane.callsign, plane.icao24);
-                
-                if (route) {
-                    console.log(`✅ ${plane.callsign}: ${route.origin} → ${route.destination}`);
-                    return {
-                        ...plane,
-                        origin: route.origin,
-                        destination: route.destination,
-                        fullRoute: route.route
-                    };
-                } else {
-                    console.log(`❌ ${plane.callsign}: No route data available`);
-                }
-                
-                return plane;
+                return route ? { ...plane, origin: route.origin, destination: route.destination, fullRoute: route.route } : plane;
             })
         );
-        
-        const withRoutes = enrichedAirplanes.filter(p => p.origin && p.destination).length;
-        console.log(`✅ Successfully fetched routes for ${withRoutes}/${airplanes.length} airplanes`);
-        
-        return enrichedAirplanes;
+
+        return enriched;
     },
     
     /**
@@ -775,11 +740,7 @@ const APIManager = {
             // Sort by distance from zenith (closest first)
             bodyPositions.sort((a, b) => a.distanceFromZenith - b.distanceFromZenith);
             
-            console.log(`Found ${bodyPositions.length} interesting celestial bodies above horizon`);
-            
-            // If no bodies above horizon, return fallback
             if (bodyPositions.length === 0) {
-                console.log('No celestial bodies above horizon, using fallback list');
                 const fallbackBodies = this.getFallbackCelestialBodies();
                 this.cache.set(cacheKey, { 
                     data: fallbackBodies, 

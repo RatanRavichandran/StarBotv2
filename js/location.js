@@ -20,27 +20,51 @@ const LocationManager = {
         return 'unknown';
     },
     
-    /**
-     * Request user's location with high accuracy
-     * HARD-CODED to Bangalore, India coordinates
-     * @returns {Promise<Object>} Location object with lat, lng, alt, accuracy
-     */
     async getLocation() {
-        return new Promise(async (resolve, reject) => {
-            // Hard-coded coordinates for Bangalore, India
-            console.log('📍 Using hard-coded location: Bangalore, India');
-            
-            this.currentLocation = {
-                latitude: 12.868754021779418,
-                longitude: 77.65127997010944,
-                altitude: 920, // Bangalore's approximate elevation in meters
-                accuracy: 10,
-                timestamp: Date.now()
-            };
-            
-            console.log('✅ Location set:', this.currentLocation);
-            resolve(this.currentLocation);
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                return this.getIPLocation().then(resolve).catch(() =>
+                    reject(new Error('Geolocation is not supported by your browser.'))
+                );
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    this.currentLocation = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        altitude: position.coords.altitude || 0,
+                        accuracy: position.coords.accuracy,
+                        timestamp: position.timestamp
+                    };
+                    resolve(this.currentLocation);
+                },
+                async (error) => {
+                    console.warn('Geolocation failed, trying IP fallback:', error.message);
+                    try {
+                        resolve(await this.getIPLocation());
+                    } catch {
+                        reject(new Error('Could not determine your location. Please allow location access and try again.'));
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
         });
+    },
+
+    async getIPLocation() {
+        const response = await fetch('https://ipapi.co/json/');
+        if (!response.ok) throw new Error('IP location service unavailable');
+        const data = await response.json();
+        if (!data.latitude || !data.longitude) throw new Error('Could not parse IP location');
+        this.currentLocation = {
+            latitude: data.latitude,
+            longitude: data.longitude,
+            altitude: 0,
+            accuracy: 50000,
+            timestamp: Date.now()
+        };
+        return this.currentLocation;
     },
     
     /**

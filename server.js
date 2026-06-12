@@ -78,7 +78,34 @@ app.post('/api/openai', async (req, res) => {
     }
 });
 
+app.get('/api/opensky', async (req, res) => {
+    try {
+        const queryParams = new URLSearchParams(req.query);
+        const url = `https://opensky-network.org/api/states/all?${queryParams}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`OpenSky error: ${response.status}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('❌ OpenSky API Error:', error.message);
+        res.status(500).json({ error: 'Failed to fetch from OpenSky', message: error.message });
+    }
+});
+
+app.post('/api/serp', async (req, res) => {
+    try {
+        if (!process.env.SERPAPI_KEY) throw new Error('SERPAPI_KEY not configured');
+        const { q, num = 3 } = req.query;
+        const url = `https://serpapi.com/search?q=${encodeURIComponent(q)}&api_key=${process.env.SERPAPI_KEY}&num=${num}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`SerpAPI error: ${response.status}`);
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log('📡 Endpoints: /api/health, /api/horizons, /api/serp, /api/openai');
 });

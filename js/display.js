@@ -69,16 +69,25 @@ const DisplayController = {
         document.getElementById('celestialInfo').classList.remove('hidden');
     },
     
-    /**
-     * Display all celestial objects
-     * @param {Object} results - All object results
-     */
+    showResultsContainer() {
+        document.getElementById('resultsSection').classList.remove('hidden');
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+    },
+
+    showRefreshButton() {
+        document.getElementById('refreshSection').classList.remove('hidden');
+    },
+
+    reveal(container) {
+        container.classList.remove('hidden', 'fade-in');
+        void container.offsetWidth; // force reflow so animation restarts on refresh
+        container.classList.add('fade-in');
+    },
+
     async displayResults(results) {
         this.hideLoading();
         document.getElementById('resultsSection').classList.remove('hidden');
         document.getElementById('refreshSection').classList.remove('hidden');
-        
-        // Update timestamp
         document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
         
         const { zenithObjects, nearbyObjects, airplanes, satellites, planets, stars, celestialBodies } = results;
@@ -154,125 +163,77 @@ const DisplayController = {
     async displayZenithObjects(objects) {
         const container = document.getElementById('zenithObject');
         const content = document.getElementById('zenithContent');
-        
         content.innerHTML = '';
-        
+        this.reveal(container);
         for (const obj of objects) {
             const objDiv = await this.createObjectElement(obj, true);
             content.appendChild(objDiv);
         }
-        
-        container.classList.remove('hidden');
     },
-    
-    /**
-     * Display nearby objects
-     * @param {Array} objects - Nearby objects
-     */
+
     async displayNearbyObjects(objects) {
         const container = document.getElementById('nearbyObjects');
         const content = document.getElementById('nearbyContent');
-        
         content.innerHTML = '';
-        
+        this.reveal(container);
         const objectsToDisplay = objects.slice(0, CONFIG.MAX_NEARBY_OBJECTS);
         for (const obj of objectsToDisplay) {
             const objDiv = await this.createObjectElement(obj, false);
             content.appendChild(objDiv);
         }
-        
-        container.classList.remove('hidden');
     },
-    
-    /**
-     * Display satellites
-     * @param {Array} satellites - Satellite objects
-     */
+
     async displaySatellites(satellites) {
         const container = document.getElementById('satelliteObjects');
         const content = document.getElementById('satelliteContent');
         const countSpan = document.getElementById('satelliteCount');
-        
         content.innerHTML = '';
-        
+        if (countSpan) countSpan.textContent = satellites.length;
+        this.reveal(container);
         for (const sat of satellites) {
             const satDiv = await this.createObjectElement(sat, false);
             satDiv.classList.add('satellite-item');
             content.appendChild(satDiv);
         }
-        
-        // Update satellite count
-        if (countSpan) {
-            countSpan.textContent = satellites.length;
-        }
-        
-        container.classList.remove('hidden');
     },
-    
-    /**
-     * Display airplanes
-     * @param {Array} airplanes - Airplane objects
-     */
+
     async displayAirplanes(airplanes) {
         const container = document.getElementById('airplaneObjects');
         const content = document.getElementById('airplaneContent');
         const countSpan = document.getElementById('airplaneCount');
-        
         content.innerHTML = '';
-        
+        if (countSpan) countSpan.textContent = airplanes.length;
+        this.reveal(container);
+        this.currentAirplanes = airplanes;
         for (const plane of airplanes) {
             const planeDiv = await this.createObjectElement(plane, false);
             planeDiv.classList.add('airplane-item');
             content.appendChild(planeDiv);
         }
-        
-        // Update airplane count
-        if (countSpan) {
-            countSpan.textContent = airplanes.length;
-        }
-        
-        container.classList.remove('hidden');
-        
-        // Store airplanes for map display
-        this.currentAirplanes = airplanes;
     },
-    
-    /**
-     * Display planets
-     * @param {Array} planets - Planet objects
-     */
+
     async displayPlanets(planets) {
         const container = document.getElementById('planetObjects');
         const content = document.getElementById('planetContent');
-        
         content.innerHTML = '';
-        
+        this.reveal(container);
         for (const planet of planets) {
             const planetDiv = await this.createObjectElement(planet, false);
             planetDiv.classList.add('planet-item');
             content.appendChild(planetDiv);
         }
-        
-        container.classList.remove('hidden');
     },
-    
-    /**
-     * Display stars
-     * @param {Array} stars - Star objects
-     */
+
     async displayStars(stars) {
         const container = document.getElementById('starObjects');
         const content = document.getElementById('starContent');
-        
         content.innerHTML = '';
-        
+        this.reveal(container);
         for (const star of stars) {
             const starDiv = await this.createObjectElement(star, false);
             starDiv.classList.add('star-item');
             content.appendChild(starDiv);
         }
-        
-        container.classList.remove('hidden');
     },
     
     /**
@@ -283,18 +244,11 @@ const DisplayController = {
         const container = document.getElementById('celestialBodyObjects');
         const content = document.getElementById('celestialBodyContent');
         
-        console.log('displayCelestialBodies called with', celestialBodies.length, 'bodies');
-        console.log('Container found:', !!container, 'Content found:', !!content);
-        
-        if (!container || !content) {
-            console.warn('Celestial bodies container not found in HTML');
-            return;
-        }
+        if (!container || !content) return;
         
         content.innerHTML = '';
         
         celestialBodies.forEach(body => {
-            console.log('Displaying celestial body:', body.name);
             const bodyDiv = document.createElement('div');
             bodyDiv.className = 'object-item';
             
@@ -377,9 +331,9 @@ const DisplayController = {
             content.appendChild(bodyDiv);
         });
         
-        container.classList.remove('hidden');
+        this.reveal(container);
     },
-    
+
     /**
      * Create an object display element
      * @param {Object} obj - Object data

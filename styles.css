@@ -838,6 +838,21 @@ footer p {
     animation: pulse 2s infinite;
 }
 
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeInUp 0.4s ease forwards;
+}
+
 @keyframes pulse {
     0%, 100% {
         box-shadow: 0 0 10px rgba(74, 144, 226, 0.6);

@@ -7,10 +7,7 @@ const App = {
      * Initialize the application
      */
     init() {
-        console.log('%c🌌 What\'s Above Me - Sky Object Detector', 'font-size: 20px; font-weight: bold; color: #4a90e2;');
-        console.log('%cInitializing...', 'color: #b8c5d6;');
-        
-        // Set up event listeners (only for elements that still exist)
+        // Set up event listeners
         const refreshBtn = document.getElementById('refreshBtn');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => {
@@ -69,38 +66,22 @@ const App = {
             });
         }
         
-        console.log('%c✅ Application ready', 'color: #51cf66; font-weight: bold;');
-        console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #3a4466;');
-        console.log('%c💡 Auto-starting with Bangalore location', 'color: #ffd700; font-weight: bold;');
-        console.log('%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'color: #3a4466;');
-        
-        // Auto-start the sky scan with hard-coded location
+        // Auto-start
         this.detectLocationAndScan();
     },
     
-    /**
-     * Detect location and scan the sky
-     */
     async detectLocationAndScan() {
         try {
             DisplayController.clearError();
             DisplayController.showLoading();
-            
-            // Get user's location
-            console.log('📍 Getting location...');
+
             this.currentLocation = await LocationManager.getLocation();
-            console.log('✅ Location obtained:', this.currentLocation);
-            
             document.getElementById('loadingMessage').textContent = 'Scanning the sky above you...';
-            
-            // Display location
             DisplayController.displayLocation(this.currentLocation);
-            
-            // Scan the sky
+
             await this.scanSky();
-            
         } catch (error) {
-            console.error('❌ Error:', error);
+            console.error('Error:', error);
             DisplayController.showError(error.message);
         }
     },
@@ -159,192 +140,97 @@ const App = {
         }
     },
     
-    /**
-     * Scan the sky for celestial objects
-     */
     async scanSky() {
         try {
             if (!this.currentLocation) {
                 throw new Error('Location not available. Please detect your location first.');
             }
-            
+
             const { latitude, longitude, altitude } = this.currentLocation;
             const now = new Date();
-            
-            console.log('🔭 Calculating zenith coordinates...');
-            
-            // Calculate zenith coordinates
-            this.currentZenithCoords = AstronomyUtils.geographicToZenithCelestial(
-                latitude, 
-                longitude, 
-                now
-            );
-            
-            console.log('✅ Zenith coords:', this.currentZenithCoords);
-            
-            // Display celestial coordinates
+
+            this.currentZenithCoords = AstronomyUtils.geographicToZenithCelestial(latitude, longitude, now);
             DisplayController.displayCelestialCoordinates(this.currentZenithCoords);
-            
-            console.log('🌠 Fetching celestial objects...');
-            
-            // Fetch all celestial objects in parallel
-            const [planets, rawAirplanes, satellites, stars, celestialBodies] = await Promise.all([
-                APIManager.fetchSolarSystemObjects(latitude, longitude, altitude, now)
-                    .catch(err => {
-                        console.warn('Failed to fetch planets:', err);
-                        return [];
-                    }),
-                APIManager.fetchAirplanes(latitude, longitude, altitude, now)
-                    .catch(err => {
-                        console.warn('Failed to fetch airplanes:', err);
-                        return [];
-                    }),
+
+            // Reveal results container immediately; sections fade in as each data source responds
+            DisplayController.hideLoading();
+            DisplayController.showResultsContainer();
+
+            // Stars are synchronous — show instantly
+            const stars = APIManager.findNearbyStars(this.currentZenithCoords.ra, this.currentZenithCoords.dec);
+            if (stars.length > 0) DisplayController.displayStars(stars);
+
+            // Fire all async fetches independently; each renders as it arrives
+            const tasks = [
                 APIManager.fetchSatellites(latitude, longitude, altitude, now)
-                    .catch(err => {
-                        console.warn('Failed to fetch satellites:', err);
-                        return [];
-                    }),
-                Promise.resolve(APIManager.findNearbyStars(
-                    this.currentZenithCoords.ra, 
-                    this.currentZenithCoords.dec
-                )),
-                APIManager.fetchInterestingCelestialBodies(
-                    latitude, 
-                    longitude, 
-                    this.currentZenithCoords.ra,
-                    this.currentZenithCoords.dec,
-                    5
-                )
-                    .catch(err => {
-                        console.warn('Failed to fetch celestial bodies:', err);
-                        return [];
+                    .then(sats => {
+                        const filtered = this.filterSatellites(sats);
+                        if (filtered.length > 0) DisplayController.displaySatellites(filtered);
                     })
-            ]);
-            
-            // Enrich airplanes with route information
-            console.log('✈️ Fetching flight routes...');
-            const airplanes = await APIManager.enrichAirplanesWithRoutes(rawAirplanes)
-                .catch(err => {
-                    console.warn('Failed to fetch routes, using basic airplane data:', err);
-                    return rawAirplanes;
-                });
-            
-            console.log(`✅ Found ${planets.length} planets, ${airplanes.length} airplanes, ${satellites.length} satellites, ${stars.length} stars, ${celestialBodies.length} celestial bodies`);
-            
-            // Categorize objects by distance from zenith
-            const results = this.categorizeObjects(
-                planets,
-                airplanes,
-                satellites, 
-                stars,
-                this.currentZenithCoords,
-                celestialBodies
-            );
-            
-            // Display results
-            await DisplayController.displayResults(results);
-            
-            console.log('✅ Sky scan complete');
-            
+                    .catch(() => {}),
+
+                APIManager.fetchSolarSystemObjects(latitude, longitude, altitude, now)
+                    .then(planets => {
+                        const visible = planets.filter(p => p.altitude > 0);
+                        if (visible.length > 0) DisplayController.displayPlanets(visible);
+                    })
+                    .catch(() => {}),
+
+                APIManager.fetchAirplanes(latitude, longitude, altitude, now)
+                    .then(raw => APIManager.enrichAirplanesWithRoutes(raw))
+                    .then(planes => {
+                        const visible = planes.filter(p => p.altitude > 0);
+                        if (visible.length > 0) DisplayController.displayAirplanes(visible);
+                    })
+                    .catch(() => {}),
+
+                APIManager.fetchInterestingCelestialBodies(
+                    latitude, longitude,
+                    this.currentZenithCoords.ra, this.currentZenithCoords.dec, 5
+                )
+                    .then(bodies => {
+                        if (bodies.length > 0) DisplayController.displayCelestialBodies(bodies);
+                    })
+                    .catch(() => {})
+            ];
+
+            await Promise.allSettled(tasks);
+            DisplayController.showRefreshButton();
+
         } catch (error) {
-            console.error('❌ Error scanning sky:', error);
+            console.error('Error scanning sky:', error);
             DisplayController.showError('Failed to scan the sky: ' + error.message);
         }
     },
-    
-    /**
-     * Categorize objects by their distance from zenith
-     * @param {Array} planets - Planet objects
-     * @param {Array} airplanes - Airplane objects
-     * @param {Array} satellites - Satellite objects
-     * @param {Array} stars - Star objects
-     * @param {Object} zenithCoords - Zenith coordinates
-     * @returns {Object} Categorized objects
-     */
-    categorizeObjects(planets, airplanes, satellites, stars, zenithCoords, celestialBodies = []) {
-        const allObjects = [...planets, ...airplanes, ...satellites, ...stars];
-        
-        // Calculate distance from zenith for each object
-        allObjects.forEach(obj => {
-            if (obj.ra !== undefined && obj.dec !== undefined) {
-                obj.distanceFromZenith = AstronomyUtils.angularDistance(
-                    zenithCoords.ra, 
-                    zenithCoords.dec,
-                    obj.ra, 
-                    obj.dec
-                );
-            } else {
-                obj.distanceFromZenith = 999; // Unknown distance
-            }
-        });
-        
-        // Separate objects at zenith (within tolerance)
-        const zenithObjects = allObjects.filter(
-            obj => obj.distanceFromZenith <= CONFIG.ZENITH_TOLERANCE
-        ).sort((a, b) => a.distanceFromZenith - b.distanceFromZenith);
-        
-        // Separate nearby objects (within nearby tolerance but not at zenith)
-        const nearbyObjects = allObjects.filter(
-            obj => obj.distanceFromZenith > CONFIG.ZENITH_TOLERANCE && 
-                   obj.distanceFromZenith <= CONFIG.NEARBY_TOLERANCE
-        ).sort((a, b) => a.distanceFromZenith - b.distanceFromZenith);
-        
-        // Add distance info to objects
-        [...zenithObjects, ...nearbyObjects].forEach(obj => {
-            obj.distance = obj.distanceFromZenith.toFixed(2);
-        });
-        
-        // Filter and sort satellites: limit to 7 closest, max 3 Starlink
-        const sortedSatellites = satellites
+
+    filterSatellites(satellites) {
+        const sorted = satellites
             .filter(s => s.altitude > 0)
-            .sort((a, b) => a.distanceFromZenith - b.distanceFromZenith);
-        
-        const filteredSatellites = [];
+            .sort((a, b) => b.altitude - a.altitude);
+
+        const filtered = [];
         let starlinkCount = 0;
-        
-        for (const sat of sortedSatellites) {
-            const isStarlink = sat.name && sat.name.toLowerCase().includes('starlink');
-            
+
+        for (const sat of sorted) {
+            const isStarlink = sat.name?.toLowerCase().includes('starlink');
             if (isStarlink) {
-                if (starlinkCount < 3) {
-                    filteredSatellites.push(sat);
-                    starlinkCount++;
-                }
+                if (starlinkCount < 3) { filtered.push(sat); starlinkCount++; }
             } else {
-                filteredSatellites.push(sat);
+                filtered.push(sat);
             }
-            
-            if (filteredSatellites.length >= 7) break;
+            if (filtered.length >= 7) break;
         }
-        
-        console.log(`Filtered satellites: ${filteredSatellites.length} (${starlinkCount} Starlink)`);
-        
-        return {
-            zenithObjects,
-            nearbyObjects,
-            airplanes: airplanes.filter(p => p.altitude > 0),
-            satellites: filteredSatellites,
-            planets: planets.filter(p => p.altitude > 0),
-            stars: stars,
-            celestialBodies: celestialBodies.slice(0, 5) // Limit to 5 interesting celestial bodies
-        };
+        return filtered;
     },
     
-    /**
-     * Refresh sky data with current location
-     */
     async refreshSkyData() {
         if (!this.currentLocation) {
             DisplayController.showError('Please detect your location first.');
             return;
         }
-        
-        console.log('🔄 Refreshing sky data...');
+
         DisplayController.showLoading();
-        
-        // Clear cache to force fresh data
         APIManager.clearCache();
-        
         await this.scanSky();
     }
 };
